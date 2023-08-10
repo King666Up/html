@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="eng">
+
+<head>
+
+    <title>现货数字货币排行</title>
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+        }
+
+        .table1 {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .table1 td,
+        .table1 th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        .table1 tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+    <title>My Page</title>
+
+    <style>
+        .log {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 10px;
+            font-size: 14px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            height: 100px;
+            overflow-y: scroll;
+            top: 0;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        var logCount = 0;
+        var logBox = null;
+        function logMessage(message) {
+            if (!logBox) {
+                logBox = document.createElement("div");
+                logBox.classList.add("log");
+                document.body.appendChild(logBox);
+            }
+            if (logCount >= 10) {
+                logBox.removeChild(logBox.lastChild);
+            }
+            var logEntry = document.createElement("div");
+            logEntry.classList.add("log-entry");
+            logEntry.innerHTML = message;
+            logBox.insertBefore(logEntry, logBox.firstChild);
+            logCount++;
+        }
+    </script>
+
+
+    <style>
+        .alert {
+            background-color: #f44336;
+            color: white;
+            padding: 20px;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+    </style>
+
+    <script>
+        function showAlert(message) {
+            var time = new Date();
+            logMessage(time.toLocaleString() + ": " + message);
+            var alertBox = document.createElement("div");
+            alertBox.classList.add("alert");
+            alertBox.innerHTML = "<strong>警告！</strong> " + message;
+            document.body.appendChild(alertBox);
+            setTimeout(function () {
+                alertBox.style.display = "none";
+            }, 5000);
+        }
+    </script>
+    <script src="FileSaver.js"></script>
+    <style>
+        .table2 {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .table2 th,
+        .table2 td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .table2 th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .alert-up {
+            color: green;
+            font-weight: bold;
+        }
+
+        .alert-down {
+            color: red;
+            font-weight: bold;
+        }
+
+        .drop-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #ccc;
+            background-color: #f0f0f0;
+            color: #666;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .drop-zone.active {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+    </style>
+    <script>
+        var 预警数组 = [];
+        function addAlert(pair, timeType, alert) {
+            预警数组.push({
+                pair: pair,
+                timeType: timeType,
+                alert: alert
+            });
+            updateTable();
+        }
+        function updateTable() {
+            var table = document.getElementById("alert-table");
+            table.innerHTML = "";
+            var headerRow = document.createElement("tr");
+            var pairHeader = document.createElement("th");
+            pairHeader.innerHTML = "交易对";
+            headerRow.appendChild(pairHeader);
+            var timeTypeHeader = document.createElement("th");
+            timeTypeHeader.innerHTML = "预警表格列";
+            headerRow.appendChild(timeTypeHeader);
+            var alertHeader = document.createElement("th");
+            alertHeader.innerHTML = "预警涨跌幅";
+            headerRow.appendChild(alertHeader);
+            table.appendChild(headerRow);
+            for (var i = 0; i < 预警数组.length; i++) {
+                var alert = 预警数组[i];
+                var row = document.createElement("tr");
+                var pairCell = document.createElement("td");
+                pairCell.innerHTML = alert.pair;
+                row.appendChild(pairCell);
+                var timeTypeCell = document.createElement("td");
+                timeTypeCell.innerHTML = alert.timeType;
+                row.appendChild(timeTypeCell);
+                var alertCell = document.createElement("td");
+                alertCell.innerHTML = alert.alert;
+                if (alert.alert > 0) {
+                    alertCell.classList.add("alert-up");
+                } else if (alert.alert < 0) {
+                    alertCell.classList.add("alert-down");
+                }
+                row.appendChild(alertCell);
+                table.appendChild(row);
+            }
+        }
+        function handleFileDrop(event) {
+            event.preventDefault();
+            var file = event.dataTransfer.files[0];
+            var reader = new FileReader();
+            reader.onload = function () {
+                var lines = reader.result.split("\n");
+                for (var i = 0; i < lines.length; i++) {
+                    var values = lines[i].trim().split("/");
+                    if (values.length === 3) {
+                        addAlert(values[0], values[1], values[2]);
+                    }
+                }
+            };
+            reader.readAsText(file);
+        }
+        function addAlertFromInput() {
+            var pairInput = document.getElementById("pair-input");
+            var timeTypeInput = document.getElementById("time-type-input");
+            var alertInput = document.getElementById("alert-input");
+            var pair = pairInput.value.trim();
+            var timeType = timeTypeInput.value.trim();
+            var alert = alertInput.value.trim();
+            if (timeType && alert) {
+                addAlert(pair, timeType, alert);
+                pairInput.value = "";
+                timeTypeInput.value = "";
+                alertInput.value = "";
+            }
+        }
+        function addAlertFromDrop() {
+            var fileInput = document.getElementById("file-input");
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function () {
+                var lines = reader.result.split("\n");
+                for (var i = 0; i < lines.length; i++) {
+                    var values = lines[i].trim().split("/");
+                    if (values.length === 3) {
+                        addAlert(values[0], values[1], values[2]);
+                    }
+                }
+            };
+            reader.readAsText(file);
+            fileInput.value = "";
+        }
+        function saveToFile() {
+            var content = "";
+            for (var i = 0; i < 预警数组.length; i++) {
+                var alert = 预警数组[i];
+                content += alert.pair + "/" + alert.timeType + "/" + alert.alert + "\n";
+            }
+            var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+            var time = new Date();
+
+            saveAs(blob, "预警表格_" + time.toLocaleString() + ".txt");
+        }
+        window.onload = function () {
+            updateTable();
+            var dropZone = document.getElementById("drop-zone");
+            dropZone.addEventListener("dragenter", function (event) {
+                event.preventDefault();
+                dropZone.classList.add("active");
+            });
+            dropZone.addEventListener("dragover", function (event) {
+                event.preventDefault();
+            });
+            dropZone.addEventListener("dragleave", function (event) {
+                event.preventDefault();
+                dropZone.classList.remove("active");
+            });
+            dropZone.addEventListener("drop", handleFileDrop);
+            var addButton = document.getElementById("add-button");
+            addButton.addEventListener("click", addAlertFromInput);
+            var fileInput = document.getElementById("file-input");
+            fileInput.addEventListener("change", addAlertFromDrop);
+            var saveButton = document.getElementById("save-button");
+            saveButton.addEventListener("click", saveToFile);
+        };
+    </script>
+
+<body>
+    <div>
+        <label>交易对：</label>
+        <input type="text" id="pair-input">
+        <label>预警表格列：</label>
+        <input type="text" id="time-type-input">
+        <label>预警涨跌幅：</label>
+        <input type="text" id="alert-input">
+        <button id="add-button">添加</button>
+    </div>
+    <div>
+        <label>从文件添加：</label>
+        <input type="file" id="file-input">
+        <button id="add-file-button">添加</button>
+    </div>
+    <div id="drop-zone" class="drop-zone">将txt文件拖到这里</div>
+    <table id="alert-table" class="table2"></table>
+    <div>
+        <button id="save-button">保存到电脑</button>
+    </div>
+</body>
+
+<body>
+    <h1 id="biaoti0">''</h1>
+    <h2 id="biaoti1">数字货币排行</h2>
+    <form>
+        <label for="sort-order">排序方式:</label>
+        <select id="sort-order" name="sort-order">
+            <option value="小">从小到大</option>
+            <option value="大">从大到小</option>
+        </select>
+        <label for="WSS地域">地域:</label>
+        <select id="WSS地域">
+            <option value="wss://sfstream.binance.com/stream">国外-合约</option>
+            <option value="wss://stream.binance.com/stream">国外-现货</option>
+
+            <option value="wss://sfstream.mokexapp.cz/stream">中国-合约</option>
+            <option value="wss://stream.mokexapp.cz/stream">中国-现货</option>
+
+
+        </select>
+        <label for="HTTP地域">HTTP地域:</label>
+        <select id="HTTP地域">
+            <option value="https://www.binance.com">国外</option>
+            <option value="http://www.mokexapp.cz">中国</option>
+
+
+        </select>
+        <input id="wss状态" type="button" value="连接" onclick="异常方式调用()">
+
+    </form>
+    <table id="tickerTable" border="1" class="table1">
+        <tr>
+            <th onclick="sortTable(0)">更新时间_0</th>
+            <th onclick="sortTable(1)">交易对_1</th>
+            <th onclick="sortTable(2)">最新价_2</th>
+            <th onclick="sortTable(3)">开盘价_3</th>
+            <th onclick="sortTable(4)">最高价_4</th>
+            <th onclick="sortTable(5)">最低价_5</th>
+            <th onclick="sortTable(6)">24h涨跌_6</th>
+            <th onclick="sortTable(7)">1分钟涨跌_7</th>
+            <th onclick="sortTable(8)">5分钟涨跌_8</th>
+            <th onclick="sortTable(9)">15分钟涨跌_9</th>
+            <th onclick="sortTable(10)">30分钟涨跌_10</th>
+            <th onclick="sortTable(11)">1小时涨跌_11</th>
+            <th onclick="sortTable(12)">4小时涨跌_12</th>
+            <th onclick="sortTable(13)">24小时涨跌_13</th>
+            <th onclick="sortTable(14)">3天涨跌_14</th>
+            <th onclick="sortTable(15)">7天涨跌_15</th>
+        </tr>
+    </table>
+
+</body>
+<script>
+    //tickerTable.rows[0].cells[0].innerHTML = '交易对' + tickerTable.rows.length;
+    //let dir = "大";//dir = "desc";
+    let zhengzaipaixu = false;
+    let lishipaixuid = 6;
+
+    function sortTable(n) {
+        var dir, table, rows, switching, i, x, y, shouldSwitch, switchcount = 0;
+
+        //if (dir == "大") { dir = "小" } else { dir = "大" };
+        dir = document.getElementById("sort-order").value;
+        table = document.getElementById("tickerTable");
+        switching = true;
+        biaoti1.innerHTML = '数字货币排行 正在排序';
+        zhengzaipaixu = true;
+        lishipaixuid = n;
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "小") {
+                    if (n > 1) {
+                        if (parseFloat(x.innerHTML) > parseFloat(y.innerHTML)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                    //console.log(typeof x.innerHTML)
+
+                } else if (dir == "大") {
+                    if (n > 1) {
+                        if (parseFloat(x.innerHTML) < parseFloat(y.innerHTML)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (shouldSwitch != undefined && switchcount == 0 && dir == "小") {
+                    //dir = "大";
+                    //switching = true;
+                }
+            }
+
+        };
+        zhengzaipaixu = false;
+        biaoti1.innerHTML = '数字货币排行 排序完毕 ' + tickerTable.rows[0].cells[n].innerHTML + ' ' + document.getElementById("sort-order").selectedOptions[0].text;
+
+    }
+</script>
+<script>
+
+    function 预警信息发送(text) {
+        //return
+
+        var audio = new Audio('tsy_1.mp3');
+        audio.play();
+        showAlert(text, 10000);
+        console.warn(new Date + "   " + text);
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("POST", "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=2060d720-ab25-4e0b-8459-4545870fc5ba", true);
+        //xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36');
+        //xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
+        //xhr.setRequestHeader('Accept-Language', 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7');
+        //xhr.setRequestHeader("Content-Type", "multipart/form-data");
+        //xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        //xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+        //xhr.setRequestHeader("Access-Control-Allow-Methods", "GET, POST, PUT");
+        //xhr.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
+        //xhr.setRequestHeader("Access-Control-Allow-Credentials", "true");
+        var data = JSON.stringify({
+            "msgtype": "text",
+            "text": {
+                "content": text
+            }
+        });
+        xhr.send(data);
+    };
+
+    function 币安获取所有币种() {
+        if (document.getElementById("WSS地域").selectedOptions[0].text.search("合约") != -1) { var dizhi = document.getElementById("HTTP地域").value + "/fapi/v1/ticker/24hr"; };
+        if (document.getElementById("WSS地域").selectedOptions[0].text.search("现货") != -1) { var dizhi = document.getElementById("HTTP地域").value + "/api/v3/ticker/24hr"; };
+
+
+        console.log(dizhi);
+
+        // 创建 XMLHttpRequest 对象
+        var xhr = new XMLHttpRequest();
+        // 设置请求方法和请求地址
+        xhr.open('GET', dizhi, false);
+        // 设置自定义请求头
+        if (document.getElementById("HTTP地域").selectedOptions[0].text == "中国") {
+            // header("Access-Control-Allow-Origin: *");
+            // header("User-Agent: okhttp/4.10.0");
+            //header("Accept-Encoding: gzip");
+
+            xhr.setRequestHeader('clienttype', 'android');
+            xhr.setRequestHeader('lang', 'zh-CN');
+            xhr.setRequestHeader('isnight', 'true');
+            xhr.setRequestHeader('bnc-app-mode', 'pro');
+            xhr.setRequestHeader('bnc-time-zone', 'Asia/Shanghai');
+            xhr.setRequestHeader('bnc-app-channel', 'binance');
+            xhr.setRequestHeader('bnc-currency', 'CNY');
+            xhr.setRequestHeader('cache-control', 'no-cache, no-store');
+            xhr.setRequestHeader('Accept-Encoding', 'gzip');
+            xhr.setRequestHeader('User-Agent', 'okhttp/4.10.0');
+            xhr.setRequestHeader('mclient-x-tag', '65uLk7Nkp0pRea2ps4Aj');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        };
+        if (document.getElementById("HTTP地域").selectedOptions[0].text == "国外") { };
+
+        // 发送请求
+        xhr.send();
+
+
+        // var xhr = new XMLHttpRequest(); //实例化XMLHttpRequest对象
+
+
+
+
+        // xhr.open("GET", dizhi, true);  //建立连接，要求异步响应
+
+        // };
+        //xhr.send();  //发送请求
+        return JSON.parse(xhr.responseText); //接收数据
+    }
+</script>
+<script src="pako.min.js"></script>
+<script>
+
+    let 订阅已发送 = 0;
+    let 指数已发送 = 0;
+
+    let ws;
+    let retryCount = 0;
+    const maxRetries = 10;
+    const retryDelay = 5000;
+    获取订阅格式 = function (币名称) {
+        if (document.getElementById("WSS地域").selectedOptions[0].text.search("现货") != -1) { return 币名称.toLowerCase() + "@kline_1d"; };
+        if (document.getElementById("WSS地域").selectedOptions[0].text.search("合约") != -1) { return 币名称.toLowerCase() + "_perpetual@continuousKline_1d"; };
+
+    };
+    单币种连接connect = function (发送内容) {
+        var 币名名称保存 = 发送内容;
+        var 币完整连接 = document.getElementById("WSS地域").value + "?streams=" + 发送内容;
+
+
+        // WebSocket connection to Binance API
+        //ws = new WebSocket('wss://stream.mokexapp.cz/stream');
+        ws = new WebSocket(币完整连接);
+
+        ws.onopen = () => retryCount = 0, console.log("WSS连接成功  " + new Date), wss状态.value = "连接成功";
+        ws.onclose = function (evt) {
+            console.log("WSS连接中断  " + new Date);
+            wss状态.value = "连接中断";
+            if (retryCount >= maxRetries) {
+                console.error("尝试最大次数WSS连接都已失败  " + new Date);
+                wss状态.value = "点击连接";
+                return;
+            }
+            retryCount++;
+            setTimeout(单币种连接connect, retryDelay, 币名名称保存);
+        };
+        ws.onmessage = function (evt) {
+            if (zhengzaipaixu == true) { return };
+            if (typeof evt.data != 'string') {
+                //console.log("blob类型数据: " + pako.inflate(evt.data, { to: "blob" })); //blob
+                var reader = new FileReader();
+                reader.readAsArrayBuffer(evt.data);
+                reader.onload = function (e) {
+                    //console.info(reader.result); //ArrayBuffer {}
+                    const data = JSON.parse(pako.inflate(reader.result, { to: "string" }));
+                    现货合约K线数据封包处理(data)
+                }
+            } else {
+                const data = JSON.parse(evt.data)
+                现货合约K线数据封包处理(data.data)
+            };
+        };
+
+    };
+
+    现货合约K线数据封包处理 = function (tickers) {
+        if (tickers == undefined || tickers.k == undefined) { return };
+        var ticker = tickers.k;
+        if (tickers.e == 'continuous_kline') {
+            ticker.s = tickers.ps
+        };
+        if (ticker.s.search("") != -1) {
+            var row = tickerTable.rows.namedItem(ticker.s);
+            var timestamp4 = new Date(tickers.E);
+            var 统计结束时间 = new Date(ticker.t);
+            ticker.E = tickers.E;
+            // If a row doesn't exist for the ticker, create one
+            if (row == null) {
+                row = tickerTable.insertRow(-1);
+                row.id = ticker.s;
+                row.insertCell(0).innerHTML = timestamp4.toLocaleDateString().replace(/\//g, "-") + " " + timestamp4.toTimeString().substr(0, 8);
+                row.insertCell(1).innerHTML = ticker.s;
+                row.insertCell(2).innerHTML = Number(ticker.c);
+                row.insertCell(3).innerHTML = Number(ticker.o);
+                row.insertCell(4).innerHTML = Number(ticker.h);
+                row.insertCell(5).innerHTML = Number(ticker.l);
+                row.insertCell(6).innerHTML = ((Number(ticker.c) - Number(ticker.o)) / Number(ticker.o) * 100).toFixed(2);
+                row.insertCell(7).innerHTML = 60 * 1000;
+                row.insertCell(8).innerHTML = 5 * 60 * 1000;
+                row.insertCell(9).innerHTML = 15 * 60 * 1000;
+                row.insertCell(10).innerHTML = 30 * 60 * 1000;
+                row.insertCell(11).innerHTML = 60 * 60 * 1000;
+                row.insertCell(12).innerHTML = 4 * 60 * 60 * 1000;
+                row.insertCell(13).innerHTML = 24 * 60 * 60 * 1000;
+                row.insertCell(14).innerHTML = 3 * 24 * 60 * 60 * 1000;
+                row.insertCell(15).innerHTML = 7 * 24 * 60 * 60 * 1000;
+
+                tickerTable.rows[0].cells[0].innerHTML = '更新时间_数量:' + tickerTable.rows.length;
+            } else {
+                // Update the row with ticker data
+
+
+                row.cells[0].innerHTML = timestamp4.toLocaleDateString().replace(/\//g, "-") + " " + timestamp4.toTimeString().substr(0, 8) + " / " + 统计结束时间.toLocaleDateString().replace(/\//g, "-") + " " + 统计结束时间.toTimeString().substr(0, 8);
+                row.cells[1].innerHTML = ticker.s;
+                row.cells[2].innerHTML = Number(ticker.c);//最新价
+                row.cells[3].innerHTML = ((Number(ticker.c) - Number(ticker.o)) / Number(ticker.o) * 100).toFixed(2) + "(" + Number(ticker.o) + ")";//开盘价
+                row.cells[4].innerHTML = ((Number(ticker.c) - Number(ticker.h)) / Number(ticker.h) * 100).toFixed(2) + "(" + Number(ticker.h) + ")";//最高价
+                row.cells[5].innerHTML = ((Number(ticker.c) - Number(ticker.l)) / Number(ticker.l) * 100).toFixed(2) + "(" + Number(ticker.l) + ")";//最低价
+                row.cells[6].innerHTML = ((Number(ticker.c) - Number(ticker.o)) / Number(ticker.o) * 100).toFixed(2);
+                geleizhangdiefu(7, ticker, row);
+                geleizhangdiefu(8, ticker, row);
+                geleizhangdiefu(9, ticker, row);
+                geleizhangdiefu(10, ticker, row);
+                geleizhangdiefu(11, ticker, row);
+                geleizhangdiefu(12, ticker, row);
+                geleizhangdiefu(13, ticker, row);
+                geleizhangdiefu(14, ticker, row);
+                geleizhangdiefu(15, ticker, row);
+                //tickerTable.rows[0].cells[0].innerHTML = '交易对'+ tickerTable.rows.length;
+
+
+                预警判断(row, 6, Number(row.cells[6].innerHTML), row.cells[1].innerHTML, Number(row.cells[2].innerHTML))
+            }
+        }
+
+
+        sortTable(lishipaixuid);//排序
+
+        if (tickerTable.rows.length > 100) {
+            var table = document.getElementById("tickerTable");
+            var 上涨 = 0, 下跌 = 0;
+            var rows = table.rows;
+            for (var i = 1; i < rows.length; i++) {
+
+                if (Number(rows[i].getElementsByTagName("TD")[6].innerHTML).toFixed(2) > 0) { 上涨++ };
+                if (Number(rows[i].getElementsByTagName("TD")[6].innerHTML).toFixed(2) < 0) { 下跌++ };
+
+            };
+            var 看涨指数 = (上涨 / tickerTable.rows.length * 100).toFixed(2);
+            var 看跌指数 = (下跌 / tickerTable.rows.length * 100).toFixed(2);
+            var datenew = new Date;
+            var hour = datenew.getHours();
+            biaoti0.innerHTML = datenew.toLocaleString() + document.getElementById("WSS地域").selectedOptions[0].text + ' 交易对总数：' + rows.length + ' 上涨数量：' + 上涨 + " 下跌数量：" + 下跌 + "    上涨指数：" + 看涨指数 + "%  下跌指数：" + 看跌指数 + "%";
+            //if (hour == 9 || hour == 12 || hour == 16 || hour == 20 || hour == 0 || hour == 4) { if (指数已发送 == 0) { 指数已发送 = 1, 预警信息发送(biaoti0.innerHTML) } } else { if (指数已发送 == 1) { 指数已发送 = 0 } }
+        }
+
+
+    };
+    geleizhangdiefu = function (i, ticker, row) {
+        if (row.cells[i].starttime == undefined || Number(ticker.E) - row.cells[i].starttime >= row.cells[i].endtimev) {
+            row.cells[i].starttime = Number(ticker.E)
+            row.cells[i].c = 0
+
+            if (row.cells[i].endtimev == undefined) { row.cells[i].endtimev = Number(row.cells[i].innerHTML) }
+            row.cells[i].innerHTML = ''
+        } else { if (row.cells[i].c > 0) { row.cells[i].innerHTML = ((Number(ticker.c) - row.cells[i].c) / row.cells[i].c * 100).toFixed(2); 预警判断(row, i, Number(row.cells[i].innerHTML), row.cells[1].innerHTML, row.cells[2].innerHTML) } else { row.cells[i].c = Number(ticker.c) } };
+    };
+    let 预警类型文本 = { 2: '最新价', 3: '开盘价', 4: '最高价', 5: '最低价', 6: '官网24小时涨跌', 7: '1分钟',8: '5分钟', 9: '15分钟', 10: '30分钟', 11: '1小时', 12: '4小时', 13: '24小时', 14: '3天', 15: '7天' };
+    let 预警类型时间值 = { 7: 60 * 1000, 8: 5 * 60 * 1000, 9: 15 * 60 * 1000, 10: 30 * 60 * 1000, 11: 60 * 60 * 1000, 12: 4 * 60 * 60 * 1000, 13: 24 * 60 * 60 * 1000, 14: 3 * 24 * 60 * 60 * 1000, 15: 7 * 24 * 60 * 60 * 1000 };
+
+    预警判断 = function (row, 类型, 涨跌百分比, 交易对, 最新价) {
+        var timeDatenow = Date.now()
+        if (row.cells[类型].发送时间 == undefined) { row.cells[类型].发送时间 = 0 }
+        // if (document.getElementById("WSS地域").selectedOptions[0].text.includes('现货') == true) {
+        //     var 预警信息组 = [{ 类型: 6, 涨百分比: 18, 跌百分比: -18, 时间: 24 * 60 * 60 * 1000 }, { 类型: 7, 涨百分比: 5, 跌百分比: -5, 时间: 5 * 60 * 1000 }, { 类型: 10, 涨百分比: 10, 跌百分比: -10, 时间: 60 * 60 * 1000 }, { 类型: 11, 涨百分比: 30, 跌百分比: -30, 时间: 4 * 60 * 60 * 1000 }]
+        // } else {
+        //     var 预警信息组 = [{ 类型: 6, 涨百分比: 10, 跌百分比: -10, 时间: 24 * 60 * 60 * 1000 }, { 类型: 7, 涨百分比: 5, 跌百分比: -5, 时间: 5 * 60 * 1000 }, { 类型: 10, 涨百分比: 7, 跌百分比: -7, 时间: 60 * 60 * 1000 }, { 类型: 11, 涨百分比: 16, 跌百分比: -16, 时间: 4 * 60 * 60 * 1000 }, { 类型: 13, 涨百分比: 28, 跌百分比: -28, 时间: 4 * 60 * 60 * 1000 }, { 类型: 14, 涨百分比: 50, 跌百分比: -50, 时间: 4 * 60 * 60 * 1000 }]
+        // };
+        for (var i = 0; i < 预警数组.length; i++) {
+            if (类型 == 预警数组[i].timeType) {
+                if (预警数组[i].pair != "") {
+                    if (预警数组[i].pair != 交易对) {
+                        continue
+                    };
+                };
+                if (预警数组[i].alert > 0) { if (涨跌百分比 >= 预警数组[i].alert && timeDatenow - Number(row.cells[类型].发送时间) >= 预警类型时间值[类型]) { row.cells[类型].发送时间 = timeDatenow, 预警信息发送(document.getElementById("WSS地域").selectedOptions[0].text + "：" + 交易对 + "," + 预警类型文本[类型] + ",涨：" + 涨跌百分比 + ", 最新价：" + 最新价) } };
+                if (预警数组[i].alert < 0) { if (涨跌百分比 <= 预警数组[i].alert && timeDatenow - Number(row.cells[类型].发送时间) >= 预警类型时间值[类型]) { row.cells[类型].发送时间 = timeDatenow, 预警信息发送(document.getElementById("WSS地域").selectedOptions[0].text + "：" + 交易对 + "," + 预警类型文本[类型] + ",跌：" + 涨跌百分比 + ", 最新价：" + 最新价) } };
+
+            }
+
+        }
+    };
+    获取币种创建连接 = function () {
+        var 所有币种 = 币安获取所有币种()
+        var o = 1
+        var fasong = '';
+        for (var i = 0; i < 所有币种.length; i++) {
+            if (fasong != '') {
+                fasong = fasong + '/' + 获取订阅格式(所有币种[i].symbol);
+            } else {
+                fasong = 获取订阅格式(所有币种[i].symbol);
+            };
+
+            if (i == 50 * o) {
+                o = o + 1;
+                单币种连接connect(fasong);
+                fasong = '';
+
+            };
+            console.warn(new Date + "   " + 所有币种[i].symbol);
+
+        };
+        if (fasong != '') {
+            单币种连接connect(fasong);
+            fasong = '';
+        };
+
+    };
+    异常方式调用 = function () {
+        try {
+
+            获取币种创建连接()
+            //阿里云链接()
+        }
+        catch (err) {
+            console.error(new Date + "   " + err.message);
+            setTimeout(异常方式调用, 3000);
+        }
+
+    };
+    企业微信测试 = function () {
+        预警信息发送("测试链接企业微信")
+    };
+
+</script>
+
+
+
+
+</head>
+
+</html>
